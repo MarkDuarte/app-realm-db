@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
+import { Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import uuid from 'react-native-uuid'
+
+import { getRealm } from '../../database/realm'
 
 import { Container, Header, Title, Form } from './styles';
 
@@ -18,6 +22,33 @@ export function NewOrder() {
 
   function handleBack() {
     navigation.goBack();
+  }
+
+  async function handleNewOrderRegister() {
+    const realm = await getRealm()
+
+    try {
+      setIsLoading(true)
+      const created = realm.write(() => {
+        realm.create("Order", {
+          _id: uuid.v4(),
+          patrimony,
+          equipment,
+          description,
+          status: 'open',
+          created_at: new Date()
+        });
+        
+        console.log(created);
+      });
+
+      Alert.alert("Chamado", "Chamado cadastrado com sucesso!");
+    } catch (error) {
+      Alert.alert("Error", "Não foi possível abrir o chamado!")
+    } finally {
+      realm.close();
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -48,6 +79,7 @@ export function NewOrder() {
       <Button
         title="Enviar chamado"
         isLoading={isLoading}
+        onPress={handleNewOrderRegister}
       />
     </Container>
   );
